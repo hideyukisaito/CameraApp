@@ -5,8 +5,12 @@
 #include "ofxStat.h"
 #include "GuidePanel.h"
 
-#define SCREEN_WIDTH 900
-#define SCREEN_HEIGHT 1440
+#define SCREEN_WIDTH     2560
+#define SCREEN_HEIGHT    1440
+#define SLIDESHOW_WIDTH  1200
+#define SLIDESHOW_HEIGHT 1920
+
+// #define ENV_RELAESE // uncomment this when release
 
 class DataFolderWatcher : public ofxStat
 {

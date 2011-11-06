@@ -3,8 +3,9 @@
 //--------------------------------------------------------------
 void testApp::setup()
 {
-    ofSetFrameRate(30);
+    ofSetFrameRate(60);
     ofBackground(0);
+    ofEnableAlphaBlending();
     ofEnableSmoothing();
     
     isGuiAvalable = false;
@@ -23,15 +24,19 @@ void testApp::setup()
     panel.setColor(color);
     panel.setSize(ofGetWidth(), 120);
     
-    vidGrabber.setVerbose(true);
-    vidGrabber.initGrabber(960, 720);
+    #ifdef ENV_RELEASE
+        vidGrabber.setVerbose(false);
+        vidGrabber.initGrabber(1920, SCREEN_HEIGHT);
+        
+        img.allocate(SCREEN_WIDTH, SCREEN_HEIGHT, OF_IMAGE_COLOR);
+    #else
+        vidGrabber.setVerbose(true);
+        vidGrabber.initGrabber(960, SCREEN_HEIGHT / 2);
+        
+        img.allocate(SCREEN_WIDTH, SCREEN_HEIGHT, OF_IMAGE_COLOR);
+    #endif
     
-    img.allocate(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, OF_IMAGE_COLOR);
-    
-    data.watch("/Users/otiashee/Downloads");
-    
-    root.watch("/");
-    ofAddListener(root.updated, &listener, &RootFolderListener::onUpdated);
+    data.watch("/Users/otiashee/Develop/openFrameworks/of_preRelease_v007_osx/apps/myApps/testApp/bin/data/export");
 }
 
 //--------------------------------------------------------------
@@ -48,17 +53,18 @@ void testApp::update()
     
     if (isPanelAvailable)
     {
-        panelY += ((ofGetHeight() - panel.getHeight()) - panelY) * 0.3;
+        panelY += ((ofGetHeight() - panel.getHeight()) - panelY) * 0.2;
     }
     else
     {
-        panelY += (ofGetHeight() - panelY) * 0.5;
+        panelY += (ofGetHeight() + 10 - panelY) * 0.2;
     }
 }
 
 //--------------------------------------------------------------
 void testApp::draw()
 {
+    img.mirror(false, true);
     img.draw(0, 0);
     
     panel.draw(0, panelY);
@@ -83,6 +89,10 @@ void testApp::keyPressed(int key)
     else if (OF_KEY_DOWN == key)
     {
         isPanelAvailable = false;
+    }
+    else if (OF_KEY_RETURN == key)
+    {
+        img.saveImage("export/foo.jpg");
     }
 }
 
