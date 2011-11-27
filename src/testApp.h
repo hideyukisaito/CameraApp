@@ -1,16 +1,16 @@
 #pragma once
 
 #include "ofMain.h"
+#include "ofxXmlSettings.h"
 #include "ofxControlPanel.h"
 #include "ofxStat.h"
 #include "GuidePanel.h"
+#include "Timer.h"
 
-#define SCREEN_WIDTH     2560
-#define SCREEN_HEIGHT    1440
+#define SCREEN_WIDTH 873
+#define SCREEN_HEIGHT 1396
 #define SLIDESHOW_WIDTH  1200
 #define SLIDESHOW_HEIGHT 1920
-
-// #define ENV_RELAESE // uncomment this when release
 
 class DataFolderWatcher : public ofxStat
 {
@@ -34,6 +34,11 @@ class testApp : public ofBaseApp
 {
 
 public:
+    ~testApp()
+    {
+        XML.saveFile("settings.xml");
+    }
+    
 	void setup();
 	void update();
 	void draw();
@@ -47,17 +52,37 @@ public:
 	void dragEvent(ofDragInfo dragInfo);
 	void gotMessage(ofMessage msg);
     
+    ofxXmlSettings XML;
+    
+    void shoot();
+    void saveImage();
+    
     bool isPanelAvailable;
     bool isGuiAvalable;
+    bool bGrabFrame;
+    bool bShoot;
     
     float panelY;
+    
+    int rectAlpha;
     
     ofxControlPanel gui;
     
     ofVideoGrabber vidGrabber;
+    float vidWidth;
+    float vidHeight;
+    float vidX;
+    float vidY;
+    
     ofImage img;
+    int snapCount;
+    
+    ofImage guide01;
+    float guide01Y;
+    int guide01Alpha;
     
     GuidePanel panel;
+    Timer timer;
     
     DataFolderWatcher data;
     

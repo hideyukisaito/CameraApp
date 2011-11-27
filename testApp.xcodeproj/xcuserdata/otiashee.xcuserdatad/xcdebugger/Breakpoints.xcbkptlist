@@ -9,11 +9,11 @@
          continueAfterRunningActions = "No"
          isPathRelative = "1"
          filePath = "src/testApp.cpp"
-         timestampString = "342213845.035268"
+         timestampString = "344018644.934289"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "64"
-         endingLineNumber = "64"
+         startingLineNumber = "88"
+         endingLineNumber = "88"
          landmarkName = "testApp::update()"
          landmarkType = "5">
       </FileBreakpoint>
@@ -23,25 +23,11 @@
          continueAfterRunningActions = "No"
          isPathRelative = "1"
          filePath = "src/GuidePanel.cpp"
-         timestampString = "342173777.906925"
+         timestampString = "344007487.404336"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "9"
-         endingLineNumber = "9">
-      </FileBreakpoint>
-      <FileBreakpoint
-         shouldBeEnabled = "No"
-         ignoreCount = "0"
-         continueAfterRunningActions = "No"
-         isPathRelative = "1"
-         filePath = "src/testApp.cpp"
-         timestampString = "342211055.060198"
-         startingColumnNumber = "9223372036854775807"
-         endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "36"
-         endingLineNumber = "36"
-         landmarkName = "testApp::setup()"
-         landmarkType = "5">
+         startingLineNumber = "19"
+         endingLineNumber = "19">
       </FileBreakpoint>
    </FileBreakpoints>
 </Bucket>
