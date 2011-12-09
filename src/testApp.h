@@ -13,9 +13,6 @@
 #define SLIDESHOW_WIDTH  1200
 #define SLIDESHOW_HEIGHT 1920
 
-#define CAMERA_APP_SETTING_FILE "/Users/otiashee/Develop/openFrameworks/of_preRelease_v007_osx/apps/myApps/SlideShowApp/bin/data/CameraApp.xml"
-#define SLIDESHOW_APP_SETTING_FILE "/Users/otiashee/Develop/openFrameworks/of_preRelease_v007_osx/apps/myApps/SlideShowApp/bin/data/SlideShowApp.xml"
-
 #define HOST "localhost"
 #define PORT_RECEIVE 15001
 #define PORT_SEND 15002
@@ -24,6 +21,9 @@ class testApp : public ofBaseApp
 {
 
 public:
+    string CAMERA_APP_SETTING_FILE;
+    string SLIDESHOW_APP_SETTING_FILE;
+    
     void setup();
 	void update();
 	void draw();

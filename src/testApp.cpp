@@ -1,8 +1,15 @@
 #include "testApp.h"
 
+
 //--------------------------------------------------------------
 void testApp::setup()
 {
+    CAMERA_APP_SETTING_FILE = ofToDataPath("CameraApp.xml");
+    SLIDESHOW_APP_SETTING_FILE = ofToDataPath("SlideShowApp.xml");
+    
+    cout << "CAMERA_APP_SETTING_FILE    : " << CAMERA_APP_SETTING_FILE << endl;
+    cout << "SLIDESHOW_APP_SETTING_FILE : " << SLIDESHOW_APP_SETTING_FILE << endl;
+    
     ofSetFrameRate(60);
     ofBackground(0);
     ofEnableAlphaBlending();
@@ -22,8 +29,8 @@ void testApp::setup()
         slideShowAppSetting.popTag();
     }
     
-    guide1.loadImage("info_1.png");
-    guide2.loadImage("info_2.png");
+    guide1.loadImage(ofToDataPath("info_1.png"));
+    guide2.loadImage(ofToDataPath("info_2.png"));
     guide = guide1;
     guide1Y = ofGetHeight() - guide1.height * 2;
     
@@ -35,12 +42,12 @@ void testApp::setup()
     bGrabFrame = true;
     
     ofTrueTypeFont arial;
-    arial.loadFont(cameraAppSetting.getValue("FONT:NAME", "arial.ttf"), cameraAppSetting.getValue("FONT:SIZE", 20), true, true);
+    arial.loadFont(ofToDataPath(cameraAppSetting.getValue("FONT:NAME", "arial.ttf")), cameraAppSetting.getValue("FONT:SIZE", 20), true, true);
     arial.setLineHeight(cameraAppSetting.getValue("FONT:LINE_HEIGHT", 24.0f));
     arial.setLetterSpacing(cameraAppSetting.getValue("FONT:LETTER_SPACING", 1.037));
     
     ofImage icon;
-    icon.loadImage("camera.png");
+    icon.loadImage(ofToDataPath("camera.png"));
     
     panelY = ofGetHeight();
     ofColor color(255);
@@ -62,7 +69,7 @@ void testApp::setup()
     gui.addSlider("rotation", "rot", 100, 0, 360, false);
     gui.addSlider("video x", "vidX", 0, -2000, 2000, false);
     gui.addSlider("video y", "vidY", 0, -2000, 2000, false);
-    gui.loadSettings("controlPanel.xml");
+    gui.loadSettings(ofToDataPath("controlPanel.xml"));
     
     img.allocate(1920, 1080, OF_IMAGE_COLOR_ALPHA);
     snapCount = cameraAppSetting.getValue("SNAP_COUNT", 0);
@@ -189,7 +196,7 @@ void testApp::saveImage()
     img.setFromPixels(vidGrabber.getPixels(), vidGrabber.getWidth(), vidGrabber.getHeight(), OF_IMAGE_COLOR);
     img.resize(1920, 1200);
     img.rotate90(135);
-    img.saveImage(path + ofToString(snapCount) + ".jpg");
+    img.saveImage(ofToDataPath(path + ofToString(snapCount) + ".jpg"));
     
     cameraAppSetting.setValue("SNAP_COUNT", snapCount);
     cameraAppSetting.saveFile();
@@ -286,5 +293,5 @@ void testApp::exit()
 {
     img.clear();
     vidGrabber.close();
-    cameraAppSetting.saveFile("settings.xml");
+    cameraAppSetting.saveFile();
 }
