@@ -9,10 +9,23 @@ void testApp::setup()
     ofEnableSmoothing();
     ofSetCircleResolution(128);
     
-    XML.loadFile("settings.xml");
+    cameraAppSetting.loadFile(CAMERA_APP_SETTING_FILE);
+    slideShowAppSetting.loadFile(SLIDESHOW_APP_SETTING_FILE);
+    if (slideShowAppSetting.pushTag("IMAGE"))
+    {
+        if (slideShowAppSetting.pushTag("PERSONS"))
+        {
+            cameraAppSetting.setValue("SNAP_COUNT", slideShowAppSetting.getNumTags("FILE_NAME") - 1);
+            cameraAppSetting.saveFile();
+            slideShowAppSetting.popTag();
+        }
+        slideShowAppSetting.popTag();
+    }
     
-    guide01.loadImage("info_1.png");
-    guide01Y = ofGetHeight() - guide01.height * 2;
+    guide1.loadImage("info_1.png");
+    guide2.loadImage("info_2.png");
+    guide = guide1;
+    guide1Y = ofGetHeight() - guide1.height * 2;
     
     rectAlpha = 0;
     
@@ -22,9 +35,9 @@ void testApp::setup()
     bGrabFrame = true;
     
     ofTrueTypeFont arial;
-    arial.loadFont(XML.getValue("FONT:NAME", "arial.ttf"), XML.getValue("FONT:SIZE", 20), true, true);
-    arial.setLineHeight(XML.getValue("FONT:LINE_HEIGHT", 24.0f));
-    arial.setLetterSpacing(XML.getValue("FONT:LETTER_SPACING", 1.037));
+    arial.loadFont(cameraAppSetting.getValue("FONT:NAME", "arial.ttf"), cameraAppSetting.getValue("FONT:SIZE", 20), true, true);
+    arial.setLineHeight(cameraAppSetting.getValue("FONT:LINE_HEIGHT", 24.0f));
+    arial.setLetterSpacing(cameraAppSetting.getValue("FONT:LETTER_SPACING", 1.037));
     
     ofImage icon;
     icon.loadImage("camera.png");
@@ -36,11 +49,11 @@ void testApp::setup()
     panel.setColor(color);
     panel.setSize(ofGetWidth(), 120);
     
-    vidGrabber.setVerbose(false);
-    vidGrabber.setUseTexture(false);
-    vidGrabber.initGrabber(XML.getValue("VIDEO_GRABBER:FRAME_WIDTH", 1280), XML.getValue("VIDEO_GRABBER:FRAME_HEIGHT", 720));
-    vidWidth = vidGrabber.width * (SCREEN_WIDTH / (float)vidGrabber.height);
-    vidHeight = vidGrabber.height * (SCREEN_WIDTH / (float)vidGrabber.height);
+    //vidGrabber.setDeviceID(4);
+    vidGrabber.initGrabber(cameraAppSetting.getValue("VIDEO_GRABBER:FRAME_WIDTH", 1280), cameraAppSetting.getValue("VIDEO_GRABBER:FRAME_HEIGHT", 720));
+    //vidGrabber.initGrabber(640, 480);
+    vidWidth = vidGrabber.getWidth() * (SCREEN_WIDTH / (float)vidGrabber.getHeight());
+    vidHeight = vidGrabber.getHeight() * (SCREEN_WIDTH / (float)vidGrabber.getHeight());
     vidX = -vidWidth;
     vidY = 0;
     
@@ -51,10 +64,11 @@ void testApp::setup()
     gui.addSlider("video y", "vidY", 0, -2000, 2000, false);
     gui.loadSettings("controlPanel.xml");
     
-    img.allocate(1920, 1080, OF_IMAGE_COLOR);
-    snapCount = XML.getValue("SNAP_COUNT", 0);
+    img.allocate(1920, 1080, OF_IMAGE_COLOR_ALPHA);
+    snapCount = cameraAppSetting.getValue("SNAP_COUNT", 0);
     
-    data.watch("/Users/otiashee/Develop/openFrameworks/of_preRelease_v007_osx/apps/myApps/testApp/bin/data/export");
+    sender.setup(HOST, PORT_SEND);
+    receiver.setup(PORT_RECEIVE);
 }
 
 //--------------------------------------------------------------
@@ -62,25 +76,51 @@ void testApp::update()
 {
     ofBackground(0);
     
-    bool isNewFrame = false;
+    while (receiver.hasWaitingMessages())
+    {
+        ofxOscMessage msg;
+        receiver.getNextMessage(&msg);
+        string addr = msg.getAddress();
+        int state;
+        
+        if ("/button/1" == addr)
+        {
+            state = ofToInt(msg.getArgAsString(0));
+            std::printf("state: %d\n", state);
+            if (bGrabFrame)
+            {
+                if (1 == state) readyForShoot();
+            }
+            else
+            {
+                if (1 == state) saveImage();
+            }
+        }
+        else if ("/button/2" == addr)
+        {
+            state = ofToInt(msg.getArgAsString(0));
+            if (!bGrabFrame)
+            {
+                if (1 == state) enableGrabFrame();
+            }
+        }
+    }
     
     if (bGrabFrame) vidGrabber.grabFrame();
-    
-    //img.setFromPixels(vidGrabber.getPixels(), vidGrabber.getWidth(), vidGrabber.getHeight(), OF_IMAGE_COLOR);
-    //img.crop((vidGrabber.getWidth() - img.getWidth()) >> 1, (vidGrabber.getHeight() - img.getHeight()) >> 1, 900, ofGetHeight());
-    //img.resize(img.getWidth() * 2, img.getHeight() * 2);
     
     if (isPanelAvailable)
     {
         panelY += ((ofGetHeight() - panel.getHeight()) - panelY) * 0.2;
-        guide01Y += ((ofGetHeight() + 10) - guide01Y) * 0.2;
-        
+        guide1Y += ((ofGetHeight() + 10) - guide1Y) * 0.2;
     }
     else
     {
         panelY += (ofGetHeight() + 10 - panelY) * 0.2;
-        guide01Y += ((ofGetHeight() - guide01.height * 2) - guide01Y) * 0.2;
+        guide1Y += ((ofGetHeight() - guide1.height * 2) - guide1Y) * 0.2;
+        //if (bGrabFrame && ofGetHeight() > guide1Y) guide = guide1;
     }
+    
+    guide = bGrabFrame ? guide1 : guide2;
     
     if (0 < rectAlpha)
     {
@@ -96,8 +136,7 @@ void testApp::draw()
     vidGrabber.draw(vidX, vidY, vidWidth, vidHeight);
     ofPopMatrix();
     
-    ofPushStyle();
-    guide01.draw((ofGetWidth() - guide01.width) >> 1, guide01Y);
+    guide.draw((ofGetWidth() - guide1.width) >> 1, guide1Y);
     
     testApp::shoot();
     
@@ -109,6 +148,19 @@ void testApp::draw()
     }
 }
 
+void testApp::enableGrabFrame()
+{
+    bShoot = false;
+    bGrabFrame = true;
+}
+
+void testApp::readyForShoot()
+{
+    timer.reset();
+    bShoot = true;
+    isPanelAvailable = true;
+}
+
 void testApp::shoot()
 {
     if (bShoot)
@@ -117,7 +169,10 @@ void testApp::shoot()
         panel.updateFocus();
         if (3 < timer.getSecond() && 3.2 > timer.getSecond())
         {
-            testApp::saveImage();
+            bShoot = false;
+            bGrabFrame = false;
+            isPanelAvailable = false;
+            rectAlpha = 255;
         }
     }
     ofPushStyle();
@@ -128,18 +183,33 @@ void testApp::shoot()
 
 void testApp::saveImage()
 {
-    bShoot = false;
-    bGrabFrame = false;
-    isPanelAvailable = false;
-    rectAlpha = 255;
+    string path = cameraAppSetting.getValue("EXPORT_PATH", "");
+    snapCount++;
     
-    img.setFromPixels(vidGrabber.getPixels(), vidGrabber.width, vidGrabber.height, OF_IMAGE_COLOR);
-    img.resize(1920, 1080);
+    img.setFromPixels(vidGrabber.getPixels(), vidGrabber.getWidth(), vidGrabber.getHeight(), OF_IMAGE_COLOR);
+    img.resize(1920, 1200);
     img.rotate90(135);
-    img.saveImage(XML.getValue("SAVE_PATH", "export") + "/" + XML.getValue("IMAGE_PREFIX", "") + ofToString(snapCount++) + ".jpg");
+    img.saveImage(path + ofToString(snapCount) + ".jpg");
     
-    XML.setValue("SNAP_COUNT", snapCount);
-    XML.saveFile("settings.xml");
+    cameraAppSetting.setValue("SNAP_COUNT", snapCount);
+    cameraAppSetting.saveFile();
+    
+    if (slideShowAppSetting.pushTag("IMAGE"))
+    {
+        if (slideShowAppSetting.pushTag("PERSONS"))
+        {
+            slideShowAppSetting.addValue("FILE_NAME", ofToString(snapCount) + ".jpg");
+            slideShowAppSetting.saveFile();
+            slideShowAppSetting.popTag();
+        }
+        slideShowAppSetting.popTag();
+    }
+    
+    
+    ofxOscMessage msg;
+    msg.setAddress("/image/filename");
+    msg.addStringArg(ofToString(snapCount) + ".jpg");
+    sender.sendMessage(msg);
 }
 
 //--------------------------------------------------------------
@@ -147,11 +217,7 @@ void testApp::keyPressed(int key)
 {
     if (32 == key)
     {
-        timer.reset();
-        bShoot = true;
-        isPanelAvailable = true;
-        
-        isPanelAvailable = true;
+        readyForShoot();
         //isGuiAvalable = !isGuiAvalable;
     }
     else if (OF_KEY_UP == key)
@@ -164,12 +230,11 @@ void testApp::keyPressed(int key)
     }
     else if (OF_KEY_RETURN == key)
     {
-        bShoot = false;
-        bGrabFrame = true;
+        enableGrabFrame();
     }
     else if ('s' == key)
     {
-        XML.saveFile("settings.xml");
+        cameraAppSetting.saveFile();
     }
 }
 
@@ -214,4 +279,12 @@ void testApp::gotMessage(ofMessage msg){
 //--------------------------------------------------------------
 void testApp::dragEvent(ofDragInfo dragInfo){ 
 
+}
+
+//--------------------------------------------------------------
+void testApp::exit()
+{
+    img.clear();
+    vidGrabber.close();
+    cameraAppSetting.saveFile("settings.xml");
 }

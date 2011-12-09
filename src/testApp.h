@@ -2,8 +2,9 @@
 
 #include "ofMain.h"
 #include "ofxXmlSettings.h"
+#include "ofxQTKitVideoGrabber.h"
 #include "ofxControlPanel.h"
-#include "ofxStat.h"
+#include "ofxOsc.h"
 #include "GuidePanel.h"
 #include "Timer.h"
 
@@ -12,34 +13,18 @@
 #define SLIDESHOW_WIDTH  1200
 #define SLIDESHOW_HEIGHT 1920
 
-class DataFolderWatcher : public ofxStat
-{
-public:
-    void onUpdated()
-    {
-        printf("DataFolderWatcher: updated!");
-    }
-};
+#define CAMERA_APP_SETTING_FILE "/Users/otiashee/Develop/openFrameworks/of_preRelease_v007_osx/apps/myApps/SlideShowApp/bin/data/CameraApp.xml"
+#define SLIDESHOW_APP_SETTING_FILE "/Users/otiashee/Develop/openFrameworks/of_preRelease_v007_osx/apps/myApps/SlideShowApp/bin/data/SlideShowApp.xml"
 
-class RootFolderListener
-{
-public:
-    void onUpdated(ofEventArgs&)
-    {
-        printf("RootFolderListener: updated!");
-    }
-};
+#define HOST "localhost"
+#define PORT_RECEIVE 15001
+#define PORT_SEND 15002
 
 class testApp : public ofBaseApp
 {
 
 public:
-    ~testApp()
-    {
-        XML.saveFile("settings.xml");
-    }
-    
-	void setup();
+    void setup();
 	void update();
 	void draw();
 	void keyPressed  (int key);
@@ -51,11 +36,16 @@ public:
 	void windowResized(int w, int h);
 	void dragEvent(ofDragInfo dragInfo);
 	void gotMessage(ofMessage msg);
+    void exit();
     
-    ofxXmlSettings XML;
     
+    void enableGrabFrame();
+    void readyForShoot();
     void shoot();
     void saveImage();
+    
+    ofxXmlSettings cameraAppSetting;
+    ofxXmlSettings slideShowAppSetting;
     
     bool isPanelAvailable;
     bool isGuiAvalable;
@@ -68,7 +58,7 @@ public:
     
     ofxControlPanel gui;
     
-    ofVideoGrabber vidGrabber;
+    ofxQTKitVideoGrabber vidGrabber;
     float vidWidth;
     float vidHeight;
     float vidX;
@@ -77,15 +67,13 @@ public:
     ofImage img;
     int snapCount;
     
-    ofImage guide01;
-    float guide01Y;
-    int guide01Alpha;
+    ofImage guide, guide1, guide2;
+    float guide1Y;
+    int guide1Alpha;
     
     GuidePanel panel;
     Timer timer;
     
-    DataFolderWatcher data;
-    
-    ofxStat root;
-    RootFolderListener listener;
+    ofxOscSender sender;
+    ofxOscReceiver receiver;
 };
