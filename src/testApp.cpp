@@ -72,7 +72,17 @@ void testApp::setup()
     gui.loadSettings(ofToDataPath("controlPanel.xml"));
     
     img.allocate(1920, 1080, OF_IMAGE_COLOR_ALPHA);
-    snapCount = cameraAppSetting.getValue("SNAP_COUNT", 0);
+    
+    if (slideShowAppSetting.pushTag("IMAGE"))
+    {
+        if (slideShowAppSetting.pushTag("PERSONS"))
+        {
+            snapCount = slideShowAppSetting.getNumTags("FILE_NAME");
+            slideShowAppSetting.popTag();
+        }
+        slideShowAppSetting.popTag();
+    }
+    cout << "snapCount: " << snapCount << endl;
     
     sender.setup(HOST, PORT_SEND);
     receiver.setup(PORT_RECEIVE);
@@ -191,7 +201,8 @@ void testApp::shoot()
 void testApp::saveImage()
 {
     string path = cameraAppSetting.getValue("EXPORT_PATH", "");
-    snapCount++;
+    ++snapCount;
+    cout << "saveImage - snapCount: " << snapCount << endl;
     
     img.setFromPixels(vidGrabber.getPixels(), vidGrabber.getWidth(), vidGrabber.getHeight(), OF_IMAGE_COLOR);
     img.resize(1920, 1200);
@@ -292,6 +303,9 @@ void testApp::dragEvent(ofDragInfo dragInfo){
 void testApp::exit()
 {
     img.clear();
+    guide.clear();
+    guide1.clear();
+    guide2.clear();
     vidGrabber.close();
     cameraAppSetting.saveFile();
 }
