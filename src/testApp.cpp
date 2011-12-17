@@ -64,8 +64,7 @@ void testApp::setup()
     cout << "(float)SCREEN_HEIGHT / (float)vidGrabber.getWidth() = " << ofToString((float)SCREEN_HEIGHT / (float)vidGrabber.getWidth()) << endl;
     cout << "(float)SCREEN_WIDTH / (float)vidGrabber.getHeight() = " << ofToString((float)SCREEN_WIDTH / (float)vidGrabber.getHeight()) << endl;
     vidWidth = vidGrabber.getWidth() * ((float)SCREEN_HEIGHT / (float)vidGrabber.getWidth());
-    vidHeight = vidGrabber.getHeight() * (float)(SCREEN_WIDTH / (float)vidGrabber.getHeight())
-    ;
+    vidHeight = vidGrabber.getHeight() * (float)(SCREEN_WIDTH / (float)vidGrabber.getHeight());
     vidX = -vidWidth;
     vidY = 0;
     
@@ -80,7 +79,6 @@ void testApp::setup()
     gui.addToggle("resize on save", "bResize", false);;
     gui.loadSettings(ofToDataPath("controlPanel.xml"));
     
-    img.allocate(1920, 1200, OF_IMAGE_COLOR);
     img.allocate((int)vidGrabber.getHeight(), (int)vidGrabber.getWidth(), OF_IMAGE_COLOR_ALPHA);
     
     if (slideShowAppSetting.pushTag("IMAGE"))
@@ -163,7 +161,6 @@ void testApp::draw()
     ofPushMatrix();
         ofRotate(270);
         vidGrabber.draw(vidX, vidY, gui.getValueF("vidWidth") * gui.getValueF("vidWidthOffset"), gui.getValueF("vidHeight") * gui.getValueF("vidHeightOffset"));
-        //vidGrabber.draw(vidX, vidY, gui.getValueF("vidWidth"), gui.getValueF("vidHeight"));
     ofPopMatrix();
     
     guide.draw((ofGetWidth() - guide1.width) >> 1, guide1Y);
@@ -218,11 +215,8 @@ void testApp::saveImage()
     cout << "saveImage - snapCount: " << snapCount << endl;
    
      
-    img.setFromPixels(vidGrabber.getPixels(), vidGrabber.getWidth(), vidGrabber.getHeight(), OF_IMAGE_COLOR_ALPHA);
-    if (gui.getValueB("bResize"))
-    {
-        img.resize(1920, 1200);
-    }
+    img.setFromPixels(vidGrabber.getPixels(), vidGrabber.getWidth(), vidGrabber.getHeight(), OF_IMAGE_COLOR);
+    if (gui.getValueB("bResize")) img.resize(1920, 1200);
     img.rotate90(135);
     img.saveImage(ofToDataPath(path + ofToString(snapCount) + ".jpg"));
     
