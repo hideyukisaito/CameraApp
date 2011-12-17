@@ -79,7 +79,7 @@ void testApp::setup()
     gui.addToggle("resize on save", "bResize", false);;
     gui.loadSettings(ofToDataPath("controlPanel.xml"));
     
-    img.allocate((int)vidGrabber.getHeight(), (int)vidGrabber.getWidth(), OF_IMAGE_COLOR_ALPHA);
+    img.allocate(vidWidth, vidHeight, OF_IMAGE_COLOR_ALPHA);
     
     if (slideShowAppSetting.pushTag("IMAGE"))
     {
