@@ -36,7 +36,7 @@ void testApp::setup()
     
     rectAlpha = 0;
     
-    isGuiAvalable = false;
+    isGuiAvalable = true;
     isPanelAvailable = false;
     bShoot = false;
     bGrabFrame = true;
@@ -58,20 +58,30 @@ void testApp::setup()
     
     //vidGrabber.setDeviceID(4);
     vidGrabber.initGrabber(cameraAppSetting.getValue("VIDEO_GRABBER:FRAME_WIDTH", 1280), cameraAppSetting.getValue("VIDEO_GRABBER:FRAME_HEIGHT", 720));
-    //vidGrabber.initGrabber(640, 480);
-    vidWidth = vidGrabber.getWidth() * (SCREEN_WIDTH / (float)vidGrabber.getHeight());
-    vidHeight = vidGrabber.getHeight() * (SCREEN_WIDTH / (float)vidGrabber.getHeight());
+    
+    cout << "vidGrabber.height = " << ofToString(vidGrabber.getHeight()) << endl;
+    cout << "vidGrabber.width = " << ofToString(vidGrabber.getWidth()) << endl;
+    cout << "(float)SCREEN_HEIGHT / (float)vidGrabber.getWidth() = " << ofToString((float)SCREEN_HEIGHT / (float)vidGrabber.getWidth()) << endl;
+    cout << "(float)SCREEN_WIDTH / (float)vidGrabber.getHeight() = " << ofToString((float)SCREEN_WIDTH / (float)vidGrabber.getHeight()) << endl;
+    vidWidth = vidGrabber.getWidth() * ((float)SCREEN_HEIGHT / (float)vidGrabber.getWidth());
+    vidHeight = vidGrabber.getHeight() * (float)(SCREEN_WIDTH / (float)vidGrabber.getHeight())
+    ;
     vidX = -vidWidth;
     vidY = 0;
     
-    gui.setup("control panel test", 0, 0, 340, 400);
-    gui.addPanel("panel 1", 1);
-    gui.addSlider("rotation", "rot", 100, 0, 360, false);
-    gui.addSlider("video x", "vidX", 0, -2000, 2000, false);
-    gui.addSlider("video y", "vidY", 0, -2000, 2000, false);
+    gui.setup("Settings", 0, 0, 270, 400);
+    gui.addPanel("", 1);
+    gui.addTextInput("OSC send port", "oscSendPort", ofToString(PORT_SEND), 80);
+    gui.addTextInput("OSC receive port", "oscReceivePort", ofToString(PORT_RECEIVE), 80);
+    gui.addSlider("video width", "vidHeight", vidHeight, vidHeight, vidHeight * 2, false);
+    gui.addSlider("video height", "vidWidth", vidWidth, vidWidth, vidWidth * 2, false);
+    gui.addSlider("width offset", "vidHeightOffset", 1, 1, 2, false);
+    gui.addSlider("height offset", "vidWidthOffset", 1, 1, 2, false);
+    gui.addToggle("resize on save", "bResize", false);;
     gui.loadSettings(ofToDataPath("controlPanel.xml"));
     
-    img.allocate(1920, 1080, OF_IMAGE_COLOR_ALPHA);
+    img.allocate(1920, 1200, OF_IMAGE_COLOR);
+    img.allocate((int)vidGrabber.getHeight(), (int)vidGrabber.getWidth(), OF_IMAGE_COLOR_ALPHA);
     
     if (slideShowAppSetting.pushTag("IMAGE"))
     {
@@ -143,14 +153,17 @@ void testApp::update()
     {
         rectAlpha = 0 >= rectAlpha ? 0 : rectAlpha -= 10;
     }
+    
+    //gui.update();
 }
 
 //--------------------------------------------------------------
 void testApp::draw()
 {
     ofPushMatrix();
-    ofRotate(270);
-    vidGrabber.draw(vidX, vidY, vidWidth, vidHeight);
+        ofRotate(270);
+        vidGrabber.draw(vidX, vidY, gui.getValueF("vidWidth") * gui.getValueF("vidWidthOffset"), gui.getValueF("vidHeight") * gui.getValueF("vidHeightOffset"));
+        //vidGrabber.draw(vidX, vidY, gui.getValueF("vidWidth"), gui.getValueF("vidHeight"));
     ofPopMatrix();
     
     guide.draw((ofGetWidth() - guide1.width) >> 1, guide1Y);
@@ -203,9 +216,13 @@ void testApp::saveImage()
     string path = cameraAppSetting.getValue("EXPORT_PATH", "");
     ++snapCount;
     cout << "saveImage - snapCount: " << snapCount << endl;
-    
-    img.setFromPixels(vidGrabber.getPixels(), vidGrabber.getWidth(), vidGrabber.getHeight(), OF_IMAGE_COLOR);
-    img.resize(1920, 1200);
+   
+     
+    img.setFromPixels(vidGrabber.getPixels(), vidGrabber.getWidth(), vidGrabber.getHeight(), OF_IMAGE_COLOR_ALPHA);
+    if (gui.getValueB("bResize"))
+    {
+        img.resize(1920, 1200);
+    }
     img.rotate90(135);
     img.saveImage(ofToDataPath(path + ofToString(snapCount) + ".jpg"));
     
@@ -233,10 +250,10 @@ void testApp::saveImage()
 //--------------------------------------------------------------
 void testApp::keyPressed(int key)
 {
+    gui.keyPressed(key);
     if (32 == key)
     {
-        readyForShoot();
-        //isGuiAvalable = !isGuiAvalable;
+       isGuiAvalable = !isGuiAvalable;
     }
     else if (OF_KEY_UP == key)
     {
@@ -248,7 +265,7 @@ void testApp::keyPressed(int key)
     }
     else if (OF_KEY_RETURN == key)
     {
-        enableGrabFrame();
+        receiver.setup(ofToInt(gui.getValueS("oscReceivePort")));
     }
     else if ('s' == key)
     {
@@ -258,7 +275,7 @@ void testApp::keyPressed(int key)
 
 //--------------------------------------------------------------
 void testApp::keyReleased(int key){
-
+    
 }
 
 //--------------------------------------------------------------
