@@ -18,11 +18,12 @@ public:
         y = ofGetHeight();
         bShow = true;
         bFocus = false;
-        focusX = focusY = 0;
+        focusAlpha = 0;
         
         hide();
         
         ofAddListener(ofEvents.update, this, &GuidePanel::update);
+        ofAddListener(timer.TIMER_REACHED, this, &GuidePanel::onTimerReached);
     };
     
     ~GuidePanel()
@@ -42,6 +43,8 @@ public:
     void draw();
     void updateFocus();
     
+    ofEvent<ofEventArgs> onCountDownCompleted;
+    
     
 private:
     bool bShow;
@@ -58,11 +61,13 @@ private:
     
     bool bFocus;
     float focusX;
-    float focusY;
+    float focusAlpha;
     
     ofxTimer timer;
     void onTimerReached(ofEventArgs &e);
     
     ofxTween yTween;
+    ofxTween focusXTween;
+    ofxTween focusAlphaTween;
     ofxEasingCirc easingCirc;
 };

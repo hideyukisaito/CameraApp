@@ -4,12 +4,14 @@
 //--------------------------------------------------------------
 void testApp::setup()
 {
+    // general settings
     ofSetFrameRate(60);
     ofBackground(0);
     ofEnableAlphaBlending();
     ofEnableSmoothing();
     ofSetCircleResolution(128);
     
+    // load setting xml files
     cameraAppSetting.loadFile(ofToDataPath(CAMERA_APP_SETTING_FILE));
     slideShowAppSetting.loadFile(ofToDataPath(SLIDESHOW_APP_SETTING_FILE));
     
@@ -25,37 +27,42 @@ void testApp::setup()
         slideShowAppSetting.popTag();
     }
     
-    dialog1.loadImage(ofToDataPath("info_1.png"));
-    dialog2.loadImage(ofToDataPath("info_2.png"));
-    dialog = dialog1;
-    dialog1Y = ofGetHeight() - dialog1.height * 2;
+    // setup information dialog
+    dialog.setup(1000);
+    dialog.addState(STATE_1, "info_1.png");
+    dialog.addState(STATE_2, "info_2.png");
+    dialog.addState(STATE_3, "info_3.png");
+    dialog.addState(STATE_4, "info_4.png");
+    dialog.changeState(STATE_1);
     
-    rectAlpha = 0;
+    // load ajax loading indicator
+    loading.loadImage(ofToDataPath("loading.png"));
+    loading.setImageType(OF_IMAGE_COLOR_ALPHA);
     
+    // init flags
     isGuiAvalable = true;
-    isPanelAvailable = false;
     bShoot = false;
     bGrabFrame = true;
     
-    ofTrueTypeFont arial;
-    arial.loadFont(ofToDataPath(cameraAppSetting.getValue("FONT:NAME", "arial.ttf")), cameraAppSetting.getValue("FONT:SIZE", 20), true, true);
-    arial.setLineHeight(cameraAppSetting.getValue("FONT:LINE_HEIGHT", 24.0f));
-    arial.setLetterSpacing(cameraAppSetting.getValue("FONT:LETTER_SPACING", 1.037));
-    
-    panelY = ofGetHeight();
+    // setup countdown panel
     ofColor color(255);
     panel.setFont(cameraAppSetting.getValue("FONT:NAME", "arial.ttf"), cameraAppSetting.getValue("FONT:SIZE", 20));
     panel.setColor(color);
     panel.setSize(ofGetWidth(), 120);
     
+    // setup ofxQTKitVideoGrabber
     setupVideoGrabber();
+    
+    // setup ofxControlPanel
     setupControlPanel();
     
-    img.allocate(vidWidth, vidHeight, OF_IMAGE_COLOR_ALPHA);
+    // init ofImage for captured image
+    capture.allocate(vidWidth, vidHeight, OF_IMAGE_COLOR_ALPHA);
     
     snapCount = getSnapCount();
     cout << "snapCount: " << snapCount << endl;
     
+    // setup OSC
     sender.setup(HOST, PORT_SEND);
     receiver.setup(PORT_RECEIVE);
     ofAddListener(receiver.onMessageReceived, this, &testApp::onMessageReceived);
@@ -93,32 +100,24 @@ void testApp::setupControlPanel()
 }
 
 //--------------------------------------------------------------
+void testApp::drawCapturedImage()
+{
+    ofPushStyle();
+        ofSetColor(255, 255, 255, captureAlphaTween.update());
+        ofPushMatrix();
+            ofRotate(-90);
+            ofTranslate(-SCREEN_HEIGHT, 0);
+            capture.draw(0, 0, SCREEN_HEIGHT, SCREEN_WIDTH);
+        ofPopMatrix();
+    ofPopStyle();
+}
+
+//--------------------------------------------------------------
 void testApp::update()
 {
     ofBackground(0);
     
     if (bGrabFrame) vidGrabber.grabFrame();
-    
-    if (isPanelAvailable)
-    {
-        panelY += ((ofGetHeight() - panel.getHeight()) - panelY) * 0.2;
-        dialog1Y += ((ofGetHeight() + 10) - dialog1Y) * 0.2;
-    }
-    else
-    {
-        panelY += (ofGetHeight() + 10 - panelY) * 0.2;
-        dialog1Y += ((ofGetHeight() - dialog1.height * 2) - dialog1Y) * 0.2;
-        //if (bGrabFrame && ofGetHeight() > dialog1Y) dialog = dialog1;
-    }
-    
-    dialog = bGrabFrame ? dialog1 : dialog2;
-    
-    if (0 < rectAlpha)
-    {
-        rectAlpha = 0 >= rectAlpha ? 0 : rectAlpha -= 10;
-    }
-    
-    //gui.update();
 }
 
 //--------------------------------------------------------------
@@ -129,9 +128,27 @@ void testApp::draw()
         vidGrabber.draw(vidX, vidY, gui.getValueF("vidWidth") * gui.getValueF("vidWidthOffset"), gui.getValueF("vidHeight") * gui.getValueF("vidHeightOffset"));
     ofPopMatrix();
     
-    dialog.draw((ofGetWidth() - dialog1.width) >> 1, dialog1Y);
+    drawCapturedImage();
     
-    shoot();
+    int overlayAlpha = (int)overlayAlphaTween.update();
+    
+    ofPushStyle();
+        ofSetColor(255, 255, 255, overlayAlpha);
+        ofRect(0, 0, ofGetWidth(), ofGetHeight());
+    ofPopStyle();
+    
+    dialog.draw();
+    if (STATE_3 == dialog.getCurrentStateName())
+    {
+        ofPushMatrix();
+            ofTranslate(ofGetWidth() / 2, ofGetHeight() / 2);
+            ofRotate(loadingRot);
+            ofPushStyle();
+            ofSetColor(255, 255, 255, overlayAlpha * 2);
+            loading.draw(-loading.getWidth() / 2, -loading.getHeight() / 2);
+            ofPopStyle();
+        ofPopMatrix();
+    }
     
     panel.draw();
     
@@ -144,6 +161,9 @@ void testApp::draw()
 //--------------------------------------------------------------
 void testApp::enableGrabFrame()
 {
+    captureAlphaTween.setParameters(4, easingCirc, ofxTween::easeOut, 255, 0, 1000, 0);
+    dialog.changeState(STATE_1);
+    
     bShoot = false;
     bGrabFrame = true;
 }
@@ -151,9 +171,10 @@ void testApp::enableGrabFrame()
 //--------------------------------------------------------------
 void testApp::readyForShoot()
 {
-    timer.reset();
     bShoot = true;
-    isPanelAvailable = true;
+    
+    ofAddListener(panel.onCountDownCompleted, this, &testApp::onCountDownCompleted);
+    dialog.hide();
     panel.show();
 }
 
@@ -162,21 +183,14 @@ void testApp::shoot()
 {
     if (bShoot)
     {
-        timer.update();
-        panel.updateFocus();
-        if (3 < timer.getSecond() && 3.2 > timer.getSecond())
-        {
-            bShoot = false;
-            bGrabFrame = false;
-            panel.hide();
-            isPanelAvailable = false;
-            rectAlpha = 255;
-        }
+        capture.setFromPixels(vidGrabber.getPixels(), vidGrabber.getWidth(), vidGrabber.getHeight(), OF_IMAGE_COLOR);
+        captureAlphaTween.setParameters(4, easingCirc, ofxTween::easeOut, 0, 255, 1000, 0);
+        
+        dialog.changeState(STATE_2);
+        
+        bShoot = false;
+        bGrabFrame = false;
     }
-    ofPushStyle();
-        ofSetColor(255, 255, 255, rectAlpha);
-        ofRect(0, 0, ofGetWidth(), ofGetHeight());
-    ofPopStyle();
 }
 
 //--------------------------------------------------------------
@@ -185,10 +199,9 @@ void testApp::saveImage()
     string path = cameraAppSetting.getValue("EXPORT_PATH", "");
     ++snapCount;
     cout << "saveImage - snapCount: " << snapCount << endl;
-   
-     
-    img.setFromPixels(vidGrabber.getPixels(), vidGrabber.getWidth(), vidGrabber.getHeight(), OF_IMAGE_COLOR);
-    // if (gui.getValueB("bResize")) img.resize(1920, 1200);
+    
+    ofImage img;
+    img.clone(capture);
     img.resize(1920, 1200);
     img.rotate90(135);
     img.saveImage(ofToDataPath(path + ofToString(snapCount) + ".jpg"));
@@ -208,6 +221,9 @@ void testApp::saveImage()
     }
     
     sendUpdateToSlideShowApp();
+    
+    dialog.changeState(STATE_4);
+    overlayAlphaTween.setParameters(1, easingCirc, ofxTween::easeOut, 127, 0, 1000, 1000);
 }
 
 //--------------------------------------------------------------
@@ -238,6 +254,36 @@ void testApp::sendUpdateToSlideShowApp()
 }
 
 //--------------------------------------------------------------
+void testApp::onDialogShowCompleted(string &statename)
+{
+    cout << "onStateChanged statename = " << statename << endl;
+    ofRemoveListener(dialog.onStateChanged, this, &testApp::onDialogShowCompleted);
+    
+    if (STATE_3 == statename)
+    {
+        saveImage();
+    }
+    else if (STATE_4 == statename)
+    {
+        ofRemoveListener(timer.TIMER_REACHED, this, &testApp::onImageSaving);
+        timer.stopTimer();
+        
+        enableGrabFrame();
+        dialog.changeState(STATE_1, 2000);
+    }
+}
+
+//--------------------------------------------------------------
+void testApp::onCountDownCompleted(ofEventArgs &e)
+{
+    overlayAlphaTween.setParameters(1, easingCirc, ofxTween::easeOut, 255, 0, 500, 0);
+    shoot();
+    
+    ofRemoveListener(panel.onCountDownCompleted, this, &testApp::onCountDownCompleted);
+    panel.hide();
+}
+
+//--------------------------------------------------------------
 void testApp::onMessageReceived(ofxOscMessage &msg)
 {
     string addr = msg.getAddress();
@@ -246,14 +292,24 @@ void testApp::onMessageReceived(ofxOscMessage &msg)
     if ("/button/1" == addr)
     {
         string s = msg.getArgAsString(0);
-        cout << "state = " << s << endl;
+        
         if (bGrabFrame)
         {
             if (1 == ofToInt(msg.getArgAsString(0))) readyForShoot();
         }
         else
         {
-            if (1 == ofToInt(msg.getArgAsString(0))) saveImage();
+            if (1 == ofToInt(msg.getArgAsString(0)))
+            {
+                overlayAlphaTween.setParameters(1, easingCirc, ofxTween::easeOut, 0, 127, 1000, 0);
+                
+                ofAddListener(timer.TIMER_REACHED, this, &testApp::onImageSaving);
+                timer.setup(50, true);
+                loadingRot = 0;
+                
+                ofAddListener(dialog.onShowCompleted, this, &testApp::onDialogShowCompleted);
+                dialog.changeState(STATE_3);
+            }
         }
     }
     else if ("/button/2" == addr)
@@ -266,20 +322,18 @@ void testApp::onMessageReceived(ofxOscMessage &msg)
 }
 
 //--------------------------------------------------------------
+void testApp::onImageSaving(ofEventArgs &e)
+{
+    loadingRot = 360 == loadingRot ? 45 : loadingRot + 45;
+}
+
+//--------------------------------------------------------------
 void testApp::keyPressed(int key)
 {
     gui.keyPressed(key);
     if (32 == key)
     {
        isGuiAvalable = !isGuiAvalable;
-    }
-    else if (OF_KEY_UP == key)
-    {
-        isPanelAvailable = true;
-    }
-    else if (OF_KEY_DOWN == key)
-    {
-        isPanelAvailable = false;
     }
     else if (OF_KEY_RETURN == key)
     {
@@ -337,10 +391,7 @@ void testApp::dragEvent(ofDragInfo dragInfo){
 //--------------------------------------------------------------
 void testApp::exit()
 {
-    img.clear();
-    dialog.clear();
-    dialog1.clear();
-    dialog2.clear();
+    capture.clear();
     vidGrabber.close();
     cameraAppSetting.saveFile();
 }

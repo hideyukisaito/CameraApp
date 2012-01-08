@@ -5,7 +5,10 @@
 #include "ofxQTKitVideoGrabber.h"
 #include "ofxControlPanel.h"
 #include "ofxOsc.h"
+#include "Dialog.h"
 #include "GuidePanel.h"
+#include "ofxTween.h"
+#include "ofxTimer.h"
 #include "Timer.h"
 
 #define CAMERA_APP_SETTING_FILE "CameraApp.xml"
@@ -15,6 +18,11 @@
 #define SCREEN_HEIGHT 1396
 #define SLIDESHOW_WIDTH  1200
 #define SLIDESHOW_HEIGHT 1920
+
+#define STATE_1 "standby"
+#define STATE_2 "confirmation"
+#define STATE_3 "save"
+#define STATE_4 "completed"
 
 #define HOST "localhost"
 #define PORT_RECEIVE 15001
@@ -44,14 +52,9 @@ public:
     void shoot();
     void saveImage();
     
-    bool isPanelAvailable;
     bool isGuiAvalable;
     bool bGrabFrame;
     bool bShoot;
-    
-    float panelY;
-    
-    int rectAlpha;
     
     ofxControlPanel gui;
     
@@ -61,24 +64,38 @@ public:
     float vidX;
     float vidY;
     
-    ofImage img;
     int snapCount;
     
-    ofImage dialog, dialog1, dialog2;
-    float dialog1Y;
-    int dialog1Alpha;
-    
     GuidePanel panel;
-    Timer timer;
     
 private:
     ofxXmlSettings cameraAppSetting;
     ofxXmlSettings slideShowAppSetting;
     
+    ofxTimer timer;
+    
+    Dialog dialog;
+    
+    int loadingRot;
+    ofImage loading;
+    
+    ofImage capture;
+    
     int getSnapCount();
-    void sendUpdateToSlideShowApp();
     
     ofxOscSender sender;
     ofxOscReceiver receiver;
+    
+    ofxTween captureAlphaTween;
+    ofxTween overlayAlphaTween;
+    ofxTween loadingAlphaTween;
+    ofxEasingCirc easingCirc;
+    
+    void drawCapturedImage();
+    void sendUpdateToSlideShowApp();
+    
+    void onDialogShowCompleted(string &statename);
+    void onCountDownCompleted(ofEventArgs &e);
     void onMessageReceived(ofxOscMessage &msg);
+    void onImageSaving(ofEventArgs &e);
 };
