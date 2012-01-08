@@ -8,6 +8,9 @@
 #include "GuidePanel.h"
 #include "Timer.h"
 
+#define CAMERA_APP_SETTING_FILE "CameraApp.xml"
+#define SLIDESHOW_APP_SETTING_FILE "SlideShowApp.xml"
+
 #define SCREEN_WIDTH 873
 #define SCREEN_HEIGHT 1396
 #define SLIDESHOW_WIDTH  1200
@@ -19,12 +22,10 @@
 
 class testApp : public ofBaseApp
 {
-
 public:
-    string CAMERA_APP_SETTING_FILE;
-    string SLIDESHOW_APP_SETTING_FILE;
-    
     void setup();
+    void setupVideoGrabber();
+    void setupControlPanel();
 	void update();
 	void draw();
 	void keyPressed  (int key);
@@ -38,14 +39,10 @@ public:
 	void gotMessage(ofMessage msg);
     void exit();
     
-    
     void enableGrabFrame();
     void readyForShoot();
     void shoot();
     void saveImage();
-    
-    ofxXmlSettings cameraAppSetting;
-    ofxXmlSettings slideShowAppSetting;
     
     bool isPanelAvailable;
     bool isGuiAvalable;
@@ -67,13 +64,21 @@ public:
     ofImage img;
     int snapCount;
     
-    ofImage guide, guide1, guide2;
-    float guide1Y;
-    int guide1Alpha;
+    ofImage dialog, dialog1, dialog2;
+    float dialog1Y;
+    int dialog1Alpha;
     
     GuidePanel panel;
     Timer timer;
     
+private:
+    ofxXmlSettings cameraAppSetting;
+    ofxXmlSettings slideShowAppSetting;
+    
+    int getSnapCount();
+    void sendUpdateToSlideShowApp();
+    
     ofxOscSender sender;
     ofxOscReceiver receiver;
+    void onMessageReceived(ofxOscMessage &msg);
 };

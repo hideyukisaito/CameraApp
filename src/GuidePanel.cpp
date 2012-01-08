@@ -1,14 +1,10 @@
 #include "GuidePanel.h"
 
 
-void GuidePanel::setFont(ofTrueTypeFont font)
+void GuidePanel::setFont(const string name, int size)
 {
-    this->font = font;
-}
-
-void GuidePanel::setIcon(ofImage icon)
-{
-    this->icon = icon;
+    font.loadFont(ofToDataPath(name), size, true, true);
+    icon.loadImage(ofToDataPath("camera.png"));
 }
 
 float GuidePanel::getWidth()
@@ -33,9 +29,33 @@ void GuidePanel::setSize(float w, float h)
     height = h;
 }
 
-void GuidePanel::draw(float x, float y)
+void GuidePanel::show()
 {
-    ypos = y + (this->height + font.stringHeight("3")) * 0.5;
+    if (!bShow)
+    {
+        bShow = true;
+        yTween.setParameters(1, easingCirc, ofxTween::easeOut, y, ofGetHeight() - height, 500, 0);
+    }
+}
+
+void GuidePanel::hide()
+{
+    if (bShow)
+    {
+        bShow = false;
+        yTween.setParameters(1, easingCirc, ofxTween::easeOut, y, ofGetHeight(), 500, 0);
+    }
+}
+
+void GuidePanel::update(ofEventArgs &e)
+{
+    y = yTween.update();
+    cout << "y: " << y << endl;
+}
+
+void GuidePanel::draw()
+{
+    ypos = y + (height + font.stringHeight("3")) * 0.5;
     
     ofPushStyle();
         ofSetColor(color.r, color.g, color.b);
@@ -45,7 +65,7 @@ void GuidePanel::draw(float x, float y)
     ofPushMatrix();
         ofPushStyle();
             ofSetColor(0);
-            ofTranslate(this->width * 0.5 - 150, ypos);
+            ofTranslate(width * 0.5 - 150, ypos);
             font.drawString("3", x, 0);
             font.drawString("2", x + 100, 0);
             font.drawString("1", x + 200, 0);
@@ -59,4 +79,9 @@ void GuidePanel::draw(float x, float y)
 void GuidePanel::updateFocus()
 {
     bFocus = true;
+}
+
+void GuidePanel::onTimerReached(ofEventArgs &e)
+{
+    
 }

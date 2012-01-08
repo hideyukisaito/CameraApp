@@ -7,27 +7,46 @@
 #include "ofMain.h"
 #include "ofTrueTypeFont.h"
 #include "ofxTween.h"
+#include "ofxTimer.h"
 
 class GuidePanel
 {
 public:
-    void setFont(ofTrueTypeFont font);
-    void setIcon(ofImage icon);
+    GuidePanel()
+    {
+        x = 0;
+        y = ofGetHeight();
+        bShow = true;
+        bFocus = false;
+        focusX = focusY = 0;
+        
+        hide();
+        
+        ofAddListener(ofEvents.update, this, &GuidePanel::update);
+    };
+    
+    ~GuidePanel()
+    {
+        ofRemoveListener(ofEvents.update, this, &GuidePanel::update);
+    };
+    
+    void setFont(const string name, int size);
     float getWidth();
     float getHeight();
     void setSize(float w, float y);
     void setColor(ofColor col);
-    void draw(float x, float y);
+    void show();
+    void hide();
+    void update(ofEventArgs &e);
+    //void draw(float x, float y);
+    void draw();
     void updateFocus();
-    
-    GuidePanel()
-    {
-        bFocus = false;
-        focusX = focusY = 0;
-    }
     
     
 private:
+    bool bShow;
+    
+    float x, y;
     float width;
     float height;
     ofColor color;
@@ -40,4 +59,10 @@ private:
     bool bFocus;
     float focusX;
     float focusY;
+    
+    ofxTimer timer;
+    void onTimerReached(ofEventArgs &e);
+    
+    ofxTween yTween;
+    ofxEasingCirc easingCirc;
 };
