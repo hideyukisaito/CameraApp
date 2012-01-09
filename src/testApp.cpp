@@ -34,6 +34,7 @@ void testApp::setup()
     dialog.addState(STATE_3, "info_3.png");
     dialog.addState(STATE_4, "info_4.png");
     dialog.changeState(STATE_1);
+    ofAddListener(dialog.onShowCompleted, this, &testApp::onDialogShowCompleted);
     
     // load ajax loading indicator
     loading.loadImage(ofToDataPath("loading.png"));
@@ -63,6 +64,7 @@ void testApp::setup()
     cout << "snapCount: " << snapCount << endl;
     
     // setup OSC
+    bOscEnabled = true;
     sender.setup(HOST, PORT_SEND);
     receiver.setup(PORT_RECEIVE);
     ofAddListener(receiver.onMessageReceived, this, &testApp::onMessageReceived);
@@ -162,7 +164,7 @@ void testApp::draw()
 void testApp::enableGrabFrame()
 {
     captureAlphaTween.setParameters(4, easingCirc, ofxTween::easeOut, 255, 0, 1000, 0);
-    dialog.changeState(STATE_1);
+    dialog.changeState(STATE_1, 500);
     
     bShoot = false;
     bGrabFrame = true;
@@ -171,6 +173,7 @@ void testApp::enableGrabFrame()
 //--------------------------------------------------------------
 void testApp::readyForShoot()
 {
+    bOscEnabled = false;
     bShoot = true;
     
     ofAddListener(panel.onCountDownCompleted, this, &testApp::onCountDownCompleted);
@@ -257,10 +260,14 @@ void testApp::sendUpdateToSlideShowApp()
 void testApp::onDialogShowCompleted(string &statename)
 {
     cout << "onStateChanged statename = " << statename << endl;
-    ofRemoveListener(dialog.onStateChanged, this, &testApp::onDialogShowCompleted);
     
-    if (STATE_3 == statename)
+    if (STATE_1 == statename || STATE_2 == statename)
     {
+        bOscEnabled = true;
+    }
+    else if (STATE_3 == statename)
+    {
+        bOscEnabled = false;
         saveImage();
     }
     else if (STATE_4 == statename)
@@ -286,37 +293,39 @@ void testApp::onCountDownCompleted(ofEventArgs &e)
 //--------------------------------------------------------------
 void testApp::onMessageReceived(ofxOscMessage &msg)
 {
-    string addr = msg.getAddress();
-    int state;
-    
-    if ("/button/1" == addr)
+    if (bOscEnabled)
     {
-        string s = msg.getArgAsString(0);
+        string addr = msg.getAddress();
+        int state;
         
-        if (bGrabFrame)
+        if ("/button/1" == addr)
         {
-            if (1 == ofToInt(msg.getArgAsString(0))) readyForShoot();
-        }
-        else
-        {
-            if (1 == ofToInt(msg.getArgAsString(0)))
+            string s = msg.getArgAsString(0);
+            
+            if (bGrabFrame)
             {
-                overlayAlphaTween.setParameters(1, easingCirc, ofxTween::easeOut, 0, 127, 1000, 0);
-                
-                ofAddListener(timer.TIMER_REACHED, this, &testApp::onImageSaving);
-                timer.setup(50, true);
-                loadingRot = 0;
-                
-                ofAddListener(dialog.onShowCompleted, this, &testApp::onDialogShowCompleted);
-                dialog.changeState(STATE_3);
+                if (1 == ofToInt(msg.getArgAsString(0))) readyForShoot();
+            }
+            else
+            {
+                if (1 == ofToInt(msg.getArgAsString(0)))
+                {
+                    overlayAlphaTween.setParameters(1, easingCirc, ofxTween::easeOut, 0, 127, 1000, 0);
+                    
+                    ofAddListener(timer.TIMER_REACHED, this, &testApp::onImageSaving);
+                    timer.setup(50, true);
+                    loadingRot = 0;
+                    
+                    dialog.changeState(STATE_3);
+                }
             }
         }
-    }
-    else if ("/button/2" == addr)
-    {
-        if (!bGrabFrame)
+        else if ("/button/2" == addr)
         {
-            if (1 == ofToInt(msg.getArgAsString(0))) enableGrabFrame();
+            if (!bGrabFrame)
+            {
+                if (1 == ofToInt(msg.getArgAsString(0))) enableGrabFrame();
+            }
         }
     }
 }
@@ -380,11 +389,6 @@ void testApp::windowResized(int w, int h){
 
 //--------------------------------------------------------------
 void testApp::gotMessage(ofMessage msg){
-
-}
-
-//--------------------------------------------------------------
-void testApp::dragEvent(ofDragInfo dragInfo){ 
 
 }
 

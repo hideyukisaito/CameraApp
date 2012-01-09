@@ -9,7 +9,6 @@
 #include "GuidePanel.h"
 #include "ofxTween.h"
 #include "ofxTimer.h"
-#include "Timer.h"
 
 #define CAMERA_APP_SETTING_FILE "CameraApp.xml"
 #define SLIDESHOW_APP_SETTING_FILE "SlideShowApp.xml"
@@ -43,7 +42,6 @@ public:
 	void mousePressed(int x, int y, int button);
 	void mouseReleased(int x, int y, int button);
 	void windowResized(int w, int h);
-	void dragEvent(ofDragInfo dragInfo);
 	void gotMessage(ofMessage msg);
     void exit();
     
@@ -52,9 +50,6 @@ public:
     void shoot();
     void saveImage();
     
-    bool isGuiAvalable;
-    bool bGrabFrame;
-    bool bShoot;
     
     ofxControlPanel gui;
     
@@ -69,6 +64,11 @@ public:
     GuidePanel panel;
     
 private:
+    bool bOscEnabled;
+    bool isGuiAvalable;
+    bool bGrabFrame;
+    bool bShoot;
+    
     ofxXmlSettings cameraAppSetting;
     ofxXmlSettings slideShowAppSetting;
     
@@ -94,6 +94,9 @@ private:
     void drawCapturedImage();
     void sendUpdateToSlideShowApp();
     
+    //--------------------------------------------------------------
+    // event listeners
+    //--------------------------------------------------------------
     void onDialogShowCompleted(string &statename);
     void onCountDownCompleted(ofEventArgs &e);
     void onMessageReceived(ofxOscMessage &msg);
