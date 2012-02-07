@@ -45,6 +45,7 @@
 		4257FD54145C5BD60092409B /* simpleFileLister.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4257FD37145C5BD60092409B /* simpleFileLister.cpp */; };
 		4257FD55145C5BD60092409B /* simpleLogger.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4257FD39145C5BD60092409B /* simpleLogger.cpp */; };
 		42603A46146524F500159960 /* GuidePanel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 42603A45146524F400159960 /* GuidePanel.cpp */; };
+		4293FDA314D01F7F00363F7F /* icon.icns in Resources */ = {isa = PBXBuildFile; fileRef = 4293FDA114D01F6D00363F7F /* icon.icns */; };
 		42C6EC0C14B85CE6000066EC /* ofxTimer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 42C6EC0A14B85CE6000066EC /* ofxTimer.cpp */; };
 		42C6EC3514B87BCE000066EC /* osc.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 42C6EC2914B87BCE000066EC /* osc.a */; };
 		42C6EC3614B87BCF000066EC /* ofxOscBundle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 42C6EC2D14B87BCE000066EC /* ofxOscBundle.cpp */; };
@@ -193,6 +194,7 @@
 		4257FD5D145C5CB50092409B /* ofxDirList.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ofxDirList.h; sourceTree = "<group>"; };
 		42603A45146524F400159960 /* GuidePanel.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = GuidePanel.cpp; sourceTree = "<group>"; };
 		42603A481465250C00159960 /* GuidePanel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GuidePanel.h; sourceTree = "<group>"; };
+		4293FDA114D01F6D00363F7F /* icon.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = icon.icns; sourceTree = "<group>"; };
 		42C6EC0014B85789000066EC /* ofxState.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ofxState.h; sourceTree = "<group>"; };
 		42C6EC0114B85789000066EC /* ofxStateMachine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ofxStateMachine.h; sourceTree = "<group>"; };
 		42C6EC0A14B85CE6000066EC /* ofxTimer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ofxTimer.cpp; sourceTree = "<group>"; };
@@ -454,6 +456,14 @@
 			path = src;
 			sourceTree = "<group>";
 		};
+		4293FDA014D01F5600363F7F /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				4293FDA114D01F6D00363F7F /* icon.icns */,
+			);
+			name = Resources;
+			sourceTree = "<group>";
+		};
 		42C6EBFD14B85789000066EC /* ofxStateMachine */ = {
 			isa = PBXGroup;
 			children = (
@@ -697,6 +707,7 @@
 		E4B69B4A0A3A1720003C02F2 = {
 			isa = PBXGroup;
 			children = (
+				4293FDA014D01F5600363F7F /* Resources */,
 				E4B6FCAD0C3E899E008CF71C /* openFrameworks-Info.plist */,
 				E4EB6923138AFD0F00A09F29 /* Project.xcconfig */,
 				E4B69E1C0A3A1BDC003C02F2 /* src */,
@@ -741,6 +752,7 @@
 				E4B69B590A3A1756003C02F2 /* Frameworks */,
 				E4B6FFFD0C3F9AB9008CF71C /* ShellScript */,
 				E4C2427710CC5ABF004149E2 /* CopyFiles */,
+				4293FDA214D01F7A00363F7F /* Resources */,
 			);
 			buildRules = (
 			);
@@ -792,6 +804,17 @@
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 /* End PBXReferenceProxy section */
+
+/* Begin PBXResourcesBuildPhase section */
+		4293FDA214D01F7A00363F7F /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4293FDA314D01F7F00363F7F /* icon.icns in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
 		E4B6FFFD0C3F9AB9008CF71C /* ShellScript */ = {

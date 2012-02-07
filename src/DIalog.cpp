@@ -37,7 +37,6 @@ void Dialog::hide()
 //--------------------------------------------------------------
 bool Dialog::addState(const string statename, const string filename)
 {
-    cout << "ofToDataPath(filename) = " << ofToDataPath(filename) << endl;
     ofImage img;
     if (img.loadImage(ofToDataPath(filename)))
     {

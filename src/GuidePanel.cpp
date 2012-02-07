@@ -5,6 +5,16 @@ void GuidePanel::setFont(const string name, int size)
 {
     font.loadFont(ofToDataPath(name), size, true, true);
     icon.loadImage(ofToDataPath("camera.png"));
+    
+    count.loadSound(ofToDataPath("sound/count.mp3"));
+    shutter.loadSound(ofToDataPath("sound/shutter.mp3"));
+    shutter.setPosition(0.15f);
+}
+
+void GuidePanel::setFont(ofTrueTypeFont f)
+{
+    font = f;
+    icon.loadImage(ofToDataPath("camera.png"));
 }
 
 float GuidePanel::getWidth()
@@ -41,6 +51,7 @@ void GuidePanel::show()
         
         ofAddListener(timer.TIMER_REACHED, this, &GuidePanel::onTimerReached);
         timer.setup(1000, true);
+        count.play();
     }
 }
 
@@ -99,6 +110,8 @@ void GuidePanel::onTimerReached(ofEventArgs &e)
 {
     if (3 == timer.count)
     {
+        shutter.play();
+        
         timer.stopTimer();
         ofRemoveListener(timer.TIMER_REACHED, this, &GuidePanel::onTimerReached);
         
@@ -106,6 +119,10 @@ void GuidePanel::onTimerReached(ofEventArgs &e)
         ofNotifyEvent(onCountDownCompleted, args, this);
         
         return;
+    }
+    else
+    {
+        count.play();
     }
     
     focusXTween.setParameters(2, easingCirc, ofxTween::easeOut, focusX, focusX + 100, 300, 0);

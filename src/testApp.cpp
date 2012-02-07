@@ -47,6 +47,7 @@ void testApp::setup()
     
     // setup countdown panel
     ofColor color(255);
+    ofTrueTypeFont font;
     panel.setFont(cameraAppSetting.getValue("FONT:NAME", "arial.ttf"), cameraAppSetting.getValue("FONT:SIZE", 20));
     panel.setColor(color);
     panel.setSize(ofGetWidth(), 120);
@@ -56,12 +57,12 @@ void testApp::setup()
     
     // setup ofxControlPanel
     setupControlPanel();
+    isGuiAvalable = false;
     
     // init ofImage for captured image
     capture.allocate(vidWidth, vidHeight, OF_IMAGE_COLOR_ALPHA);
     
     snapCount = getSnapCount();
-    cout << "snapCount: " << snapCount << endl;
     
     // setup OSC
     bOscEnabled = true;
@@ -76,10 +77,6 @@ void testApp::setupVideoGrabber()
     //vidGrabber.setDeviceID(4);
     vidGrabber.initGrabber(cameraAppSetting.getValue("VIDEO_GRABBER:FRAME_WIDTH", 1280), cameraAppSetting.getValue("VIDEO_GRABBER:FRAME_HEIGHT", 720));
     
-    cout << "vidGrabber.height = " << ofToString(vidGrabber.getHeight()) << endl;
-    cout << "vidGrabber.width = " << ofToString(vidGrabber.getWidth()) << endl;
-    cout << "(float)SCREEN_HEIGHT / (float)vidGrabber.getWidth() = " << ofToString((float)SCREEN_HEIGHT / (float)vidGrabber.getWidth()) << endl;
-    cout << "(float)SCREEN_WIDTH / (float)vidGrabber.getHeight() = " << ofToString((float)SCREEN_WIDTH / (float)vidGrabber.getHeight()) << endl;
     vidWidth = vidGrabber.getWidth() * ((float)SCREEN_HEIGHT / (float)vidGrabber.getWidth());
     vidHeight = vidGrabber.getHeight() * (float)(SCREEN_WIDTH / (float)vidGrabber.getHeight());
     vidX = -vidWidth;
@@ -201,7 +198,6 @@ void testApp::saveImage()
 {
     string path = cameraAppSetting.getValue("EXPORT_PATH", "");
     ++snapCount;
-    cout << "saveImage - snapCount: " << snapCount << endl;
     
     ofImage img;
     img.clone(capture);
@@ -216,7 +212,7 @@ void testApp::saveImage()
     {
         if (slideShowAppSetting.pushTag("PERSONS"))
         {
-            slideShowAppSetting.addValue("FILE_NAME", ofToString(snapCount) + ".jpg");
+            slideShowAppSetting.addValueAtFirst("FILE_NAME", ofToString(snapCount) + ".jpg");
             slideShowAppSetting.saveFile();
             slideShowAppSetting.popTag();
         }
@@ -397,5 +393,8 @@ void testApp::exit()
 {
     capture.clear();
     vidGrabber.close();
+    loading.clear();
+    
     cameraAppSetting.saveFile();
+    slideShowAppSetting.saveFile();
 }

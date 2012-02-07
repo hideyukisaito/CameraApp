@@ -8,6 +8,7 @@
 #include "ofTrueTypeFont.h"
 #include "ofxTween.h"
 #include "ofxTimer.h"
+#include "ofSoundPlayer.h"
 
 class GuidePanel
 {
@@ -29,9 +30,12 @@ public:
     ~GuidePanel()
     {
         ofRemoveListener(ofEvents.update, this, &GuidePanel::update);
+        count.unloadSound();
+        shutter.unloadSound();
     };
     
     void setFont(const string name, int size);
+    void setFont(ofTrueTypeFont f);
     float getWidth();
     float getHeight();
     void setSize(float w, float y);
@@ -70,4 +74,7 @@ private:
     ofxTween focusXTween;
     ofxTween focusAlphaTween;
     ofxEasingCirc easingCirc;
+    
+    ofSoundPlayer count;
+    ofSoundPlayer shutter;
 };
